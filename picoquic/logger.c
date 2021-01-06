@@ -27,6 +27,7 @@
 #include "fnv1a.h"
 #include "picoquic_internal.h"
 #include "tls_api.h"
+#include <time.h>
 
 void picoquic_log_bytes(FILE* F, uint8_t* bytes, size_t bytes_max)
 {
@@ -471,6 +472,19 @@ size_t picoquic_log_stream_frame(FILE* F, uint8_t* bytes, size_t bytes_max)
         fprintf(F, "%02x", bytes[byte_index + i]);
     }
     fprintf(F, "%s\n", (data_length > 8) ? "..." : "");
+    
+    /** inefficient; ugly; just for the purpose of some Failover experiment
+     * results */
+    struct timeval now;
+    struct tm *tm;
+    gettimeofday(&now, NULL);
+    tm = localtime(&now.tv_sec);
+    char timebuf[32], usecbuf[7];
+    strftime(timebuf, 32, "%H:%M:%S", tm);
+    strcat(timebuf, ".");
+    sprintf(usecbuf, "%d", (uint32_t) now.tv_usec);
+    strcat(timebuf, usecbuf);
+    fprintf(F, "%s backward > compatibility %lu\n", timebuf, data_length);
 
     return byte_index + data_length;
 }
